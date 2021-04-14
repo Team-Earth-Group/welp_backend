@@ -1,7 +1,6 @@
 const models = require("../models")
 const userController = {}
 
-
 //signup
 userController.createUser = async (req, res) => {
     try {
@@ -42,9 +41,7 @@ userController.login = async (req, res) => {
 //get all users
 userController.getAll = async (req, res) => {
     try {
-        console.log("hi")
         const users = await models.user.findAll()
-        console.log(users);
         res.json({ users })
     } catch (error) {
         res.status(400)
@@ -101,5 +98,148 @@ userController.destroy = async (req, res) => {
         res.json({ error: 'could not delete user' })
     }
 }
+
+// get all user businesses
+userController.allbusinesses = async (req, res) => {
+    try {
+        const user = await models.user.findOne(
+            {
+                where: {
+                    id: req.params.id
+                }
+            }
+        )
+
+        const businesses = await user.getBusinesses({
+            include: models.user,
+            attributes: { exclude: ['userId'] }
+        })
+        res.json({
+            businesses
+        })
+
+    } catch (error) {
+        console.log(error);
+        res.status(400)
+        res.json({
+            message: 'something went wrong.'
+        })
+    }
+}
+
+// get a specific user business
+userController.getBusiness = async (req, res) => {
+    try {
+        const userId = req.params.id
+        const businessId = req.params.businessId
+
+        const business = await models.business.findOne(
+            {
+                where: {
+                    id: businessId,
+                    userId: userId
+                },
+                include: models.user,
+                attributes: { exclude: ['userId'] }
+            }
+        )
+
+        res.json({
+            business
+        })
+
+    } catch (error) {
+        res.status(400)
+        res.json({
+            message: 'something went wrong.'
+        })
+    }
+}
+
+// create a new business
+userController.createBusiness = async (req, res) => {
+    try {
+        const { name, location, type, imageUrl, description } = req.body
+        const user = await models.user.findOne(
+            {
+                where: {
+                    id: req.params.id
+                }
+            }
+        )
+
+        const business = await models.business.create({
+            name: name,
+            location: location,
+            type: type,
+            imageUrl: imageUrl,
+            description: description
+        })
+
+        await user.addBusiness(business)
+
+        res.json({
+            message: 'ok',
+            user,
+            business
+        })
+
+    } catch (error) {
+        res.status(400)
+        res.json({
+            message: 'something went wrong.'
+        })
+    }
+}
+
+// update user business
+userController.updateBusiness = async (req, res) => {
+    try {
+        const userId = req.params.id
+        const businessId = req.params.businessId
+        await models.business.update(
+            req.body,
+            {
+                where: {
+                    id: businessId,
+                    userId: userId
+                }
+            })
+
+        const business = await models.business.findOne({
+            where: {
+                id: businessId
+            }
+        })
+        res.json({
+            business
+        })
+    } catch (error) {
+        res.status(400)
+        res.json({
+            message: 'something went wrong.'
+        })
+    }
+}
+
+// delete a user business 
+
+userController.deleteBusiness = async (req, res) => {
+    try {
+        const business = await models.business.findOne(
+            {
+                where: {
+                    id: req.params.businessId,
+                    userId: req.params.id
+                }
+            })
+        await business.destroy()
+        res.json({ message: 'ok', business })
+    } catch (error) {
+        res.status(400)
+        res.json({ message: 'somethinng went wrong.' })
+    }
+}
+
 module.exports = userController
 
