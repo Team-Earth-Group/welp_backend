@@ -1,10 +1,21 @@
 const models = require('../models')
+const { Op } = require("sequelize");
 const businessController = {}
 
 
 businessController.getAll = async (req, res) => {
     try {
+        const keyword = req.query.keyword
+        const location = req.query.location
         const businesses = await models.business.findAll({
+            where: {
+                type: {
+                    [Op.substring]: keyword
+                },
+                location: {
+                    [Op.substring]: location
+                },
+            },
             include: models.user,
             attributes: { exclude: ['userId'] }
         })
