@@ -61,8 +61,10 @@ businessController.createComment = async (req, res) => {
     try {
         const business = await models.business.findOne({
             where: {
-                id: req.params.id
-            }
+                id: req.params.id,
+            },
+            include: models.user,
+            attributes: { exclude: ['userId'] }
         })
 
         const comment = await models.comment.create({
