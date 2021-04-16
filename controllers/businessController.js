@@ -32,16 +32,21 @@ businessController.getAll = async (req, res) => {
 
 }
 
+
+
 businessController.getComments = async (req, res) => {
     try {
         const business = await models.business.findOne({
             where: {
                 id: req.params.id
-            }
+            },
+            include: models.user,
+            attributes: { exclude: ['userId'] }
         })
 
         const comments = await business.getComments()
         res.json({
+            business,
             comments
         })
     } catch (error) {
