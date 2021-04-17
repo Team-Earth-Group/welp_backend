@@ -44,7 +44,10 @@ businessController.getComments = async (req, res) => {
             attributes: { exclude: ['userId'] }
         })
 
-        const comments = await business.getComments()
+        const comments = await business.getComments({
+            include: models.user,
+            attributes: { exclude: ['userId'] }
+        })
         res.json({
             business,
             comments
@@ -69,14 +72,22 @@ businessController.createComment = async (req, res) => {
 
         const comment = await models.comment.create({
             text: req.body.text,
-            userId: req.body.userId
+            userId: req.body.userId,
+            rating: req.body.rating
+        })
+
+        const user = await models.user.findOne({
+            where: {
+                id: req.body.userId
+            }
         })
 
         await business.addComment(comment)
 
         res.json({
+            comment,
             business,
-            comment
+            user
         })
     } catch (error) {
         res.status(400)
