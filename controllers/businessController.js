@@ -41,7 +41,10 @@ businessController.getComments = async (req, res) => {
                 id: req.params.id
             },
             include: models.user,
-            attributes: { exclude: ['userId'] }
+            attributes: { exclude: ['userId'] },
+            order: [
+                ['createdAt', 'DESC']
+            ],
         })
 
         const comments = await business.getComments({
