@@ -10,10 +10,10 @@ businessController.getAll = async (req, res) => {
         const businesses = await models.business.findAll({
             where: {
                 type: {
-                    [Op.substring]: keyword
+                    [Op.substring]: keyword ? keyword : ''
                 },
                 location: {
-                    [Op.substring]: location
+                    [Op.substring]: location ? location : ''
                 },
             },
             include: models.user,
