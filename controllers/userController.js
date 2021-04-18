@@ -1,15 +1,20 @@
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 const models = require("../models")
 const userController = {}
 
 //signup
 userController.createUser = async (req, res) => {
     try {
+        const hashedPassword = bcrypt.hashSync(req.body.password, 10)
         const user = await models.user.create({
             name: req.body.name,
             email: req.body.email,
-            password: req.body.password
+            password: hashedPassword
         })
-        res.json({ message: 'New user has been created', user })
+        const encryptedId = jwt.sign({ userId: user.id }, process.env.JWT_SECRET)
+        console.log(encryptedId);
+        res.json({ message: 'New user has been created', userId: encryptedId })
 
     } catch (error) {
         res.status(400)
@@ -26,8 +31,9 @@ userController.login = async (req, res) => {
                 email: req.body.email
             }
         })
-        if (user.password === req.body.password) {
-            res.json({ message: 'login successful', user: user })
+        if (bcrypt.compareSync(req.body.password, user.password)) {
+            const encryptedId = jwt.sign({ userId: user.id }, process.env.JWT_SECRET)
+            res.json({ message: 'login successful', userId: encryptedId })
         } else {
             res.status(401)
             res.json({ error: 'incorrect password' })
@@ -96,6 +102,20 @@ userController.destroy = async (req, res) => {
     } catch (error) {
         res.status(400)
         res.json({ error: 'could not delete user' })
+    }
+}
+
+userController.userProfile = async (req, res) => {
+    try {
+        // we used to look up user in here
+        // but now it's looked up before all routes and attached to req
+        // so there's no need to look it up in here
+        // furthermore, we could access req.user in any route
+        // this is useful because irl, we have many many routes that want to access the currently logged in user, not just 1
+        res.json({ user: req.user })
+    } catch (error) {
+        console.log(error)
+        res.status(404).json({ error: 'user profile not found' })
     }
 }
 
